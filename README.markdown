@@ -31,7 +31,129 @@ king title and another turn begins.
 
 The playing order is kept between games for 16 games in a row, then it is shuffled.
 
+When at least 5 bots are registered for a game, the game starts 10 seconds later. Other bots can still register or unregister, each event resetting the 10
+seconds timer.
+
+When a vote begins, each client has 15 seconds to vote.
+
 Protocol
 ========
 
-TODO
+The following describes the avalon protocol version 0.1.
+
+Message Format
+--------------
+
+Each message is composed of a command in caps and a list of parameters separated by spaces.
+
+Messages can be used by clients (IA), the Game Server (called Arthur in the rest of this document), or both.
+
+All messages are to be sent to arthur directly using PRIVMSG and not on the game channel unless specified otherwise.
+
+Messages
+--------
+
+### Registration
+
+#### REGISTER <owner> <bot_version> <protocol_version>
+REGISTER message is used by clients to tell Arthur that they want to participate in the next game. The *owner* parameter is the irc nick of the bot's creator, and
+will be used for the leaderboards. The *bot_version* is the version of your bot implementation, again for the leaderboards. The *protocol_version* is used to make
+sure your bot matches with the current protocol and ruleset for the Avalon Game.
+
+Upon registration, the entire irc identification string is recorded (for example *pbot!~julien@midgard*) to identify your bot. If this doesn't match a previous
+registration for this nickname, your registration will be answered by an ERR_NICK_RESERVED message. If your protocol_version mismatches Arthur's, your
+registration will be answered by an ERR_PROTOCOL_MISMATCH message. If the couple (nick, *bot_version*) is banned, arthur will answer with ERR_BANNED.
+
+#### REGISTERED
+REGISTERED message is sent by arthur to confirm your registration. This will also trigger an INFO message on the #avalon game channel.
+
+#### UNREGISTER [now]
+UNREGISTER message is sent by clients to specify their intention not to participate in the next game. The optionnal parameter *now* specifies the game is to
+be cancelled. Please be a gentleman and gently let your bot finish the current game and only use the *now* parameter when absolutely needed (irrecoverable error).
+
+#### UNREGISTERED
+UNREGISTERED message is sent by arthur to confirm your unregistration. This will also trigger an INFO message on the #avalon game channel.
+
+### Game flow
+
+#### GAMESTART <nick> <nick> ...
+GAMESTART message is sent by arthur on the #avalon game channel to mark the start of the game. The parameters of this command are the clients in playing order.
+
+#### ROLE <role> [nick]
+ROLE message is sent right after the GAMESTART message to tell each client it's *role* which can be either : GOOD, MERLIN, EVIL, ASSASSIN. The *nick* parameter
+is unused in this scope
+ROLE message is also sent by arthur at the end of the game on the #avalon game channel.
+
+#### KING <nick> <number> <failed_votes>
+KING message is sent by arthur on the #avalon game channel to signal the new king. *number* is the number of teammates the king must designate to go on the
+quest. *failed_votes* is the current number of failed votes in a row, after 5 failed votes in a row the EVIL side wins. When the KING message is issued, the client has 15 seconds to designate it's team.
+
+#### RULENOW
+RULENOW message is sent by arthur to the king on the #avalon game channel to signal a client it has only 2 seconds remaining to designate it's team. If the
+client already sent it's TEAM message, this message must be ignored.
+
+Failure to do so in time results on an UNREGISTERED message from arthur and another game begins with the remaining participants 10 sec later. The kicked client
+can re register for the next game, but after 3 failures in a row the client and it's version will be banned from entering the game until it's developper fixes
+it's code and increment the version number.
+
+#### TEAM <nick> <nick> ...
+TEAM message is sent by the king on the #avalon game channel to advertise to all participants the team it has chosen to go on the quest. When the TEAM message is
+receive, a 15 seconds voting window opens for the clients.
+
+#### VOTE <yes|no>
+VOTE message is sent by clients to arhur to vote on a quest. Only the first VOTE message on each quest is taken in consideration by arthur, others are ignored.
+
+#### VOTENOW
+VOTENOW message is sent by arthur to clients that didn't vote already to signal them that they have only 2 seconds remaining to vote. If the client already voted
+this turn, it can ignore this message.
+
+The same failure outcome as for the RULENOW message applies here.
+
+#### VOTERESULT <PASS|FAIL> <yes> <no>
+VOTERESULT message is sent on the #avalon game channel by arthur to give the result of the vote. *status* is either PASS or FAIL, *yes* is the number of yes in
+the vote and *no* the number of no. If the vote status is PASS, team members have 15 seconds to send a new vote, for the quest success this time.
+
+If the vote status is FAILED, another turn ends and endgame conditions are evaluated.
+
+#### QUESTRESULT <PASS|FAIL> <yes> <no>
+QUESTRESULT message is sent on the #avalon game channel by arthur to give the result of the quest. *status* is either PASS or FAIL, *yes* is the number of yes in
+the vote and *no* the number of no.
+
+### Game ends
+
+#### TRYANDKILLMERLIN
+TRYANDKILLMERLIN message is sent on the #avalon game channel by arthur to ask the ASSASSIN has 15 seconds to guess who MERLIN isi if the GOOD side win three quests.
+
+#### TRYANDKILLNOW
+TRYANDKILLNOW message is sent by arthur to the assassin that didn't designate MERLIN when there are only 2 seconds remaining.
+
+#### ASSASSIN <nick>
+ASSASSIN message is sent by the ASSASSIN to designate *nick* as MERLIN.
+
+#### WINNERSIDE <GOOD|EVIL> <nick> <nick> ...
+WINNERSIDE message is sent by arthur to designate the winner's side at the end of the game. Winning nicks are given as arguments for posterity and glory.
+
+#### INFO <stuff>
+INFO messages are sent at various points by arthur to comment on what is happening : a bot registers for the next game, a bot misbehaves, etc. Those messages can
+be safely ignored and are only provided for additional entertainment.
+
+#### GAMEURL <url>
+GAMEURL message is sent by arthur on the #avalon game channel to provide the game transcript.
+
+### Errors
+
+#### ERR_NICK_RESERVED
+
+#### ERR_PROTOCOL_MISMATCH
+
+#### ERR_BANNED
+
+#### ERR_INVALID_TEAM
+
+#### ERR_INVALID_VOTE
+
+#### ERR_VOTE_TIMEOUT
+
+#### ERR_NOT_THE_ASSASSIN
+
+#### ERR_NOT_NOW
