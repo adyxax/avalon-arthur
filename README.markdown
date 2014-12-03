@@ -121,14 +121,14 @@ the vote and *no* the number of no.
 
 ### Game ends
 
-#### TRYANDKILLMERLIN
+#### KILLMERLIN
 TRYANDKILLMERLIN message is sent on the #avalon game channel by arthur to ask the ASSASSIN has 15 seconds to guess who MERLIN isi if the GOOD side win three quests.
 
-#### TRYANDKILLNOW
-TRYANDKILLNOW message is sent by arthur to the assassin that didn't designate MERLIN when there are only 2 seconds remaining.
+#### KILLMERLINNOW
+TRYANDKILLMERLINNOW message is sent by arthur to the assassin that didn't designate MERLIN when there are only 2 seconds remaining.
 
-#### ASSASSIN *nick*
-ASSASSIN message is sent by the ASSASSIN to designate *nick* as MERLIN.
+#### KILL *nick*
+KILL message is sent by the ASSASSIN to designate *nick* as MERLIN.
 
 #### WINNERSIDE *GOOD|EVIL* *nick* *nick* ...
 WINNERSIDE message is sent by arthur to designate the winner's side at the end of the game. Winning nicks are given as arguments for posterity and glory.
