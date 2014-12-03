@@ -14,10 +14,10 @@ fail. Evil also wins if the assassin manages to correctly guess who Merlin is, o
 |:-----------------:|:--------------:|:----------------------:|:------------:|:-----------:|:------------:|:-----------:|
 | 5 | 2 | 2 | 3 | 2 | 3 | 3 |
 | 6 | 2 | 2 | 3 | 4 | 3 | 4 |
-| 7 | 3 | 2 | 3 | 3 | 4 | 4 |
-| 8 | 3 | 3 | 4 | 4 | 5 | 5 |
-| 9 | 3 | 3 | 4 | 4 | 5 | 5 |
-| 10 | 4 | 3 | 4 | 4 | 5 | 5 |
+| 7 | 3 | 2 | 3 | 3 | 4+ | 4 |
+| 8 | 3 | 3 | 4 | 4 | 5+ | 5 |
+| 9 | 3 | 3 | 4 | 4 | 5+ | 5 |
+| 10 | 4 | 3 | 4 | 4 | 5+ | 5 |
 
 This first implementation of the game is simple, with special characters limited to Merlin on the good side, and the assassin on the evil side.
 
@@ -26,7 +26,7 @@ is randomly assigned and given the king title, and the first turn begins.
 
 On each turn, a team is formed by the king to accomplish the quest. Then each AI votes whether or not they support sending the specified team on the quest. If the
 vote passes (absolute majority), each member of the team will vote whether or not the quest succeeds. The quest succeeds if all team members vote for
-success. If the vote fails, we increment the failed vote counter. We check then for end game conditions, and if those are not met, the next player is given the
+success, except for the fourth quest at 7 or more players succeeds if all or all but one team members vote for success. If the vote fails, we increment the failed vote counter. We check then for end game conditions, and if those are not met, the next player is given the
 king title and another turn begins.
 
 The playing order is kept between games for 16 games in a row, then it is shuffled.
@@ -157,3 +157,5 @@ GAMEURL message is sent by arthur on the #avalon game channel to provide the gam
 #### ERR_NOT_THE_ASSASSIN
 
 #### ERR_NOT_NOW
+
+#### ERR_JOIN_AVALON_FIRST
