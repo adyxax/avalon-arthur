@@ -1,6 +1,6 @@
 package Bot::BasicBot::Pluggable::Module::Avalon;
 {
-    $Avalon::Arthur::VERSION = '0.03';
+    $Avalon::Arthur::VERSION = '0.04';
 };
 
 use strict;
@@ -9,6 +9,7 @@ use v5.12;
 use experimental qw(autoderef switch);
 use Bot::BasicBot::Pluggable::Store::DBI;
 use List::Util qw(shuffle);
+use Math::Random::Secure qw(rand);
 use POE;
 use Time::HiRes qw(time);
 
@@ -26,6 +27,11 @@ my %gamerules = (
     9  => [ 3, 3, 4, 4, 5, 5, 1],
     10 => [ 4, 3, 4, 4, 5, 5, 1],
 );
+
+sub game_ready {
+    my $av = shift->{avalon};
+    return scalar keys $av->{registered} >= 5;
+}
 
 sub load_avalon_db {
     my $self = shift;
@@ -54,14 +60,59 @@ sub reset_game {
     $av->{quests} = { pass => 0, fail => 0, votes => 0 };
 }
 
+sub rules {
+    my $av = shift->{avalon};
+    my $players = scalar keys $av->{players};
+    return ($players, $gamerules{$players});
+}
+
 sub set_timeout {
     my ( $self, $value) = @_;
     $poe_kernel->alarm( avalon_timeout => time() + $value );
 }
 
+sub start_game {
+    my $self = shift;
+    my $av = $self->{avalon};
+    my @players = shuffle keys $av->{registered};
+    $av->{players} = \@players;
+    $self->say( channel => $av->{config}->{'game.channel'}, body => "GAMESTART " . join(' ', @players) );
+    $self->set_timeout(10);
+}
+
 sub timeout_occurred {
     my $self = shift;
-    $self->say( channel => $self->{avalon}->{config}->{'game.channel'}, body => "timeout" );
+    my $av = $self->{avalon};
+    given ($av->{gamephase}) {
+        when (GAMESTART) {
+            return unless $self->game_ready;
+            # First we prepare the characters pool
+            my ($players, $rules) = $self->rules;
+            my $evils = $rules->[NUMBER_OF_EVIL_PLAYERS];
+            my @characters = ( 'MERLIN', 'ASSASSIN');
+            for (my $i = 1; $i < $evils; $i++) { push @characters, ( 'EVIL' ); }
+            for (my $i = $evils + 1; $i < $players; $i++) { push @characters, ( 'GOOD' ); }
+            my @shuffled = shuffle @characters;
+            # Then we assign roles
+            for (my $i = 0; $i < $players; $i++) {
+                my $role = pop @shuffled;
+                push $av->{roles}->{$role}, $av->{players}->[$i];
+                $self->say( channel => 'msg', who => $av->{players}->[$i], body => "ROLE $role");
+            }
+            # Now we give special information to special characters
+            my $evil_msg = "EVIL $av->{roles}->{ASSASSIN}->[0] " . join(' ', @{$av->{roles}->{EVIL}});
+            $self->say( channel => 'msg', who => $av->{roles}->{MERLIN}->[0], body => $evil_msg );
+            $self->say( channel => 'msg', who => $av->{roles}->{ASSASSIN}->[0], body => $evil_msg );
+            $self->say( channel => 'msg', who => $_, body => $evil_msg ) foreach (@{$av->{roles}->{EVIL}});
+            # Finally we designate the first king
+            $av->{king} = rand($players);
+            $self->say( channel => $self->{avalon}->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}]" );
+            $self->{gamephase} = TEAM;
+        }
+        default {
+            $self->say( channel => $self->{avalon}->{config}->{'game.channel'}, body => "timeout" );
+        }
+    }
 }
 
 ### IRC methods override ######################################################
@@ -105,6 +156,7 @@ sub told {
             }
             $av->{registered}->{$who} = { owner => $owner, version => $bot_version };
             $self->say( channel => $av->{config}->{'game.channel'}, body => "REGISTERED $who" );
+            $self->start_game if $self->game_ready;
         }
         when ("REGISTERED") {}
         when ("UNREGISTER") {}
