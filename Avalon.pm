@@ -7,8 +7,27 @@ use strict;
 use warnings;
 use v5.12;
 use experimental qw(switch);
+use POE;
+use Time::HiRes qw(time);
 
 use base qw(Bot::BasicBot::Pluggable::Module);
+
+### Game logic ###############################################################
+sub set_timeout {
+    my ( $self, $value) = @_;
+    $poe_kernel->alarm( avalon_timeout => time() + $value );
+}
+
+sub timeout_occurred {
+    my $self = shift;
+    $self->say( channel => $self->{avalon}->{config}->{'game.channel'}, body => "timeout" );
+}
+
+### IRC methods override ######################################################
+sub connected {
+    my $self = shift;
+    $poe_kernel->state( 'avalon_timeout', $self, 'timeout_occurred' );
+}
 
 sub init {
     my $self = shift;
