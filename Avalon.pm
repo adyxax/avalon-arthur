@@ -1,6 +1,6 @@
 package Bot::BasicBot::Pluggable::Module::Avalon;
 {
-    $Avalon::Arthur::VERSION = '0.02';
+    $Avalon::Arthur::VERSION = '0.03';
 };
 
 use strict;
@@ -92,7 +92,20 @@ sub told {
 
     my ( $command, @args ) = split /\s+/, $mess->{body};
     given ($command) {
-        when ("REGISTER") {}
+        when ("REGISTER") {
+            return 'ERR_BAD_ARGUMENTS' if scalar @args != 3;
+            my ( $owner, $bot_version, $protocol_version ) = @args;
+            return 'ERR_PROTOCOL_MISMATCH' if $protocol_version ne $Avalon::Arthur::VERSION;
+            my $record = $avdb->get('REGISTRATIONS', $who);
+            if ($record) {
+                return 'ERR_NICK_RESERVED' if $record ne $mess->{raw_nick};
+                return 'ERR_BANNED' if $avdb->get('BANS', $who . $bot_version);
+            } else {
+                $avdb->set('REGISTRATIONS', $who, $mess->{raw_nick});
+            }
+            $av->{registered}->{$who} = { owner => $owner, version => $bot_version };
+            $self->say( channel => $av->{config}->{'game.channel'}, body => "REGISTERED $who" );
+        }
         when ("REGISTERED") {}
         when ("UNREGISTER") {}
         when ("UNREGISTERED") {}
