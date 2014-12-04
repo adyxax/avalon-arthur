@@ -64,8 +64,8 @@ Upon registration, the entire irc identification string is recorded (for example
 registration for this nickname, your registration will be answered by an ERR_NICK_RESERVED message. If your protocol_version mismatches Arthur's, your
 registration will be answered by an ERR_PROTOCOL_MISMATCH message. If the couple (nick, *bot_version*) is banned, arthur will answer with ERR_BANNED.
 
-#### REGISTERED
-REGISTERED message is sent by arthur to confirm your registration. This will also trigger an INFO message on the #avalon game channel.
+#### REGISTERED [nick]
+REGISTERED message is sent by arthur on the #avalon game channel to confirm your registration and announce it to all participants.
 
 #### UNREGISTER [now]
 UNREGISTER message is sent by clients to specify their intention not to participate in the next game. The optionnal parameter *now* specifies the game is to
@@ -79,10 +79,16 @@ UNREGISTERED message is sent by arthur to confirm your unregistration. This will
 #### GAMESTART *nick* *nick* ...
 GAMESTART message is sent by arthur on the #avalon game channel to mark the start of the game. The parameters of this command are the clients in playing order.
 
+10 seconds after the GAMESTART message is issued, the game will effectively start by sending ROLE and KING messages. If any new REGISTER or UNREGISTER messages
+are received during this time lapse and if there are still enough participants for a game, a new GAMESTART message is sent and this timer restarts from 10.
+
 #### ROLE *role* [nick]
 ROLE message is sent right after the GAMESTART message to tell each client it's *role* which can be either : GOOD, MERLIN, EVIL, ASSASSIN. The *nick* parameter
 is unused in this scope
 ROLE message is also sent by arthur at the end of the game on the #avalon game channel.
+
+#### EVIL *nick* *nick*
+EVIL message is sent to evil players and MERLIN right after roles have been announced by arthur.
 
 #### KING *nick* *number* *failed_votes*
 KING message is sent by arthur on the #avalon game channel to signal the new king. *number* is the number of teammates the king must designate to go on the
@@ -134,13 +140,17 @@ KILL message is sent by the ASSASSIN to designate *nick* as MERLIN.
 WINNERSIDE message is sent by arthur to designate the winner's side at the end of the game. Winning nicks are given as arguments for posterity and glory.
 
 #### INFO *stuff*
-INFO messages are sent at various points by arthur to comment on what is happening : a bot registers for the next game, a bot misbehaves, etc. Those messages can
+INFO messages are sent at various points by arthur to comment on what is happening : a bot misbehaves, etc. Those messages can
 be safely ignored and are only provided for additional entertainment.
 
 #### GAMEURL *url*
 GAMEURL message is sent by arthur on the #avalon game channel to provide the game transcript.
 
 ### Errors
+
+#### ERR_BAD_ARGUMENTS
+
+#### ERR_BAD_DESTINATION
 
 #### ERR_NICK_RESERVED
 

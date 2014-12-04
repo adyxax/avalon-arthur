@@ -1,6 +1,6 @@
 package Bot::BasicBot::Pluggable::Module::Avalon;
 {
-    $Avalon::Arthur::VERSION = '0.01';
+    $Avalon::Arthur::VERSION = '0.02';
 };
 
 use strict;
@@ -34,6 +34,7 @@ sub told {
         when ("UNREGISTERED") {}
         when ("GAMESTART") {}
         when ("ROLE") {}
+        when ("EVIL") {}
         when ("KING") {}
         when ("RULENOW") {}
         when ("TEAM") {}
@@ -47,6 +48,8 @@ sub told {
         when ("WINNERSIDE") {}
         when ("INFO") {}
         when ("GAMEURL") {}
+        when ("ERR_BAD_ARGUMENTS") {}
+        when ("ERR_BAD_DESTINATION") {}
         when ("ERR_NICK_RESERVED") {}
         when ("ERR_PROTOCOL_MISMATCH") {}
         when ("ERR_BANNED") {}
