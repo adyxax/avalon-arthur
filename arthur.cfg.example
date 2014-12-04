@@ -7,5 +7,7 @@ ircname  = Arthur the Avalon Game Master
 server   = example.org
 port     = 6667
 password =
-channel  = "#avalon"
 ssl      = 1
+
+[game]
+channel  = "#avalon"

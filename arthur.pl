@@ -4,9 +4,6 @@ use warnings;
 use strict;
 
 package Avalon::Arthur;
-{
-    $Avalon::Arthur::VERSION = '0.01';
-}
 
 use Bot::BasicBot::Pluggable;
 use Config::Simple;
@@ -21,10 +18,10 @@ my $bot = Bot::BasicBot::Pluggable->new(
     port     => $cfg{'irc.port'},
     password => $cfg{'irc.password'},
     ssl      => $cfg{'irc.ssl'},
-    channels => ($cfg{'irc.channel'}),
+    channels => ($cfg{'game.channel'}),
     store    => Bot::BasicBot::Pluggable::Store->new(),
 );
-$bot->{cfg} = \%cfg;
+$bot->{store_object}->{store}->{cfg}->{cfg} = \%cfg;
 
 $bot->load("Auth");
 $bot->{store_object}->{store}->{Auth}->{password_admin} = $cfg{'admin.password'};

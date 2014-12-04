@@ -1,4 +1,7 @@
 package Bot::BasicBot::Pluggable::Module::Avalon;
+{
+    $Avalon::Arthur::VERSION = '0.01';
+};
 
 use strict;
 use warnings;
@@ -7,12 +10,19 @@ use experimental qw(switch);
 
 use base qw(Bot::BasicBot::Pluggable::Module);
 
+sub init {
+    my $self = shift;
+    $self->{avalon} = {};
+    $self->{avalon}->{config} = $self->bot->{store_object}->{store}->{cfg}->{cfg};
+}
+
 sub help {
     return "The avalon game simulator : https://github.com/adyxax/avalon-arthur";
 }
 
 sub told {
     my ( $self, $mess ) = @_;
+    my $who = $mess->{who};
     my $body = $mess->{body};
     my $ispriv = defined $mess->{address};
 
