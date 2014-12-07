@@ -33,6 +33,18 @@ sub game_ready {
     return ( $av->{gamephase} == GAMESTART and scalar keys $av->{registered} >= 5 );
 }
 
+sub kick {
+    my ( $self, $who ) = @_;
+    my $av = $self->{avalon};
+    my $avdb = $self->{avdb};
+    my $entry = $who . $av->{registered}->{$who}->{version};
+    my $score = $avdb->get('KICKS', $entry);
+    $avdb->set('KICKS', $entry, defined $score ? int($score) + 1 : 1);
+    $self->say( channel => $av->{config}->{'game.channel'}, body => "UNREGISTERED $who" );
+    delete $av->{registered}->{$who};
+    $self->reset_game;
+}
+
 sub load_avalon_db {
     my $self = shift;
     # This database stores registrations and bans
@@ -110,6 +122,17 @@ sub timeout_occurred {
             $av->{king} = rand($players);
             $self->say( channel => $av->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}] $rules->[$av->{round}->{id} + 1] $av->{round}->{failed_votes}" );
             $av->{gamephase} = TEAM;
+            $av->{lastcall} = 0;
+            $self->set_timeout(58);
+        }
+        when (TEAM) {
+            if ($av->{lastcall}) {
+                $self->kick($av->{players}->[$av->{king}]);
+            } else {
+                $self->say( channel => $av->{config}->{'game.channel'}, body => "RULENOW $av->{players}->[$av->{king}]" );
+                $self->set_timeout(2);
+                $av->{lastcall} = 1;
+            }
         }
         default {
             $self->say( channel => $av->{config}->{'game.channel'}, body => "timeout" );
