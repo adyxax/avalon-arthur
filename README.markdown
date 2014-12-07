@@ -94,7 +94,7 @@ EVIL message is sent to evil players and MERLIN right after roles have been anno
 KING message is sent by arthur on the #avalon game channel to signal the new king. *number* is the number of teammates the king must designate to go on the
 quest. *failed_votes* is the current number of failed votes in a row, after 5 failed votes in a row the EVIL side wins. When the KING message is issued, the client has 15 seconds to designate it's team.
 
-#### RULENOW
+#### RULENOW *nick*
 RULENOW message is sent by arthur to the king on the #avalon game channel to signal a client it has only 2 seconds remaining to designate it's team. If the
 client already sent it's TEAM message, this message must be ignored.
 
