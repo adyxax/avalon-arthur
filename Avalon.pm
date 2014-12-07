@@ -186,7 +186,14 @@ sub told {
             $self->start_game if $self->game_ready;
         }
         when ("REGISTERED") {}
-        when ("UNREGISTER") {}
+        when ("UNREGISTER") {
+            return unless $av->{registered}->{$who} or $who ~~ $av->{players};
+            delete $av->{registered}->{$who};
+            $self->say( channel => $av->{config}->{'game.channel'}, body => "UNREGISTERED $who" );
+            if ($av->{gamephase} == GAMESTART or (scalar @args > 0 and $args[0] eq "now" and $who ~~ $av->{players})) {
+                $self->reset_game;
+            }
+        }
         when ("UNREGISTERED") {}
         when ("GAMESTART") {}
         when ("ROLE") {}
