@@ -30,7 +30,7 @@ my %gamerules = (
 
 sub game_ready {
     my $av = shift->{avalon};
-    return scalar keys $av->{registered} >= 5;
+    return ( $av->{gamephase} == GAMESTART and scalar keys $av->{registered} >= 5 );
 }
 
 sub load_avalon_db {
@@ -43,11 +43,10 @@ sub load_avalon_db {
 }
 
 sub reset_game {
-    my $av = shift->{avalon};
+    my $self = shift;
+    my $av = $self->{avalon};
     $av->{gamephase} = GAMESTART;
-    $av->{gamesplayed} = 0;
     $av->{timeout} = 0;
-    $av->{registered} = {};
     $av->{players} = ();
     $av->{roles} = {
         'MERLIN' => [],
@@ -57,7 +56,10 @@ sub reset_game {
     };
     $av->{king} = 0;
     $av->{votes} = { pass => 0, fail => 0 };
-    $av->{quests} = { pass => 0, fail => 0, votes => 0 };
+    $av->{quests} = { pass => 0, fail => 0 };
+    $av->{round} = { id => 0, failed_votes => 0 };
+    $av->{lastcall} = 0;
+    $self->start_game if $self->game_ready;
 }
 
 sub rules {
@@ -106,11 +108,11 @@ sub timeout_occurred {
             $self->say( channel => 'msg', who => $_, body => $evil_msg ) foreach (@{$av->{roles}->{EVIL}});
             # Finally we designate the first king
             $av->{king} = rand($players);
-            $self->say( channel => $self->{avalon}->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}]" );
-            $self->{gamephase} = TEAM;
+            $self->say( channel => $av->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}] $rules->[$av->{round}->{id} + 1] $av->{round}->{failed_votes}" );
+            $av->{gamephase} = TEAM;
         }
         default {
-            $self->say( channel => $self->{avalon}->{config}->{'game.channel'}, body => "timeout" );
+            $self->say( channel => $av->{config}->{'game.channel'}, body => "timeout" );
         }
     }
 }
@@ -123,9 +125,11 @@ sub connected {
 
 sub init {
     my $self = shift;
-    $self->{avalon} = {};
-    $self->{avalon}->{config} = $self->bot->{store_object}->{store}->{cfg}->{cfg};
+    my $av = $self->{avalon} = {};
     $self->load_avalon_db;
+    $av->{config} = $self->bot->{store_object}->{store}->{cfg}->{cfg};
+    $av->{gamesplayed} = 0;
+    $av->{registered} = {};
     $self->reset_game;
 }
 
@@ -150,7 +154,7 @@ sub told {
             my $record = $avdb->get('REGISTRATIONS', $who);
             if ($record) {
                 return 'ERR_NICK_RESERVED' if $record ne $mess->{raw_nick};
-                return 'ERR_BANNED' if $avdb->get('BANS', $who . $bot_version);
+                return 'ERR_BANNED' if $avdb->get('KICKS', $who . $bot_version) and int($avdb->get('KICKS', $who . $bot_version)) >= 3;
             } else {
                 $avdb->set('REGISTRATIONS', $who, $mess->{raw_nick});
             }
