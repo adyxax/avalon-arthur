@@ -90,9 +90,9 @@ ROLE message is also sent by arthur at the end of the game on the #avalon game c
 #### EVIL *nick* *nick*
 EVIL message is sent to evil players and MERLIN right after roles have been announced by arthur.
 
-#### KING *nick* *number* *failed_votes*
-KING message is sent by arthur on the #avalon game channel to signal the new king. *number* is the number of teammates the king must designate to go on the
-quest. *failed_votes* is the current number of failed votes in a row, after 5 failed votes in a row the EVIL side wins. When the KING message is issued, the client has 15 seconds to designate it's team.
+#### KING *nick* *team_size* *failed_votes*
+KING message is sent by arthur on the #avalon game channel to signal the new king. *team_size* is the number of teammates the king must designate to go on the
+quest. *failed_votes* is the current number of failed votes in a row, after 5 failed votes in a row the EVIL side wins. When the KING message is issued, the client has 60 seconds to designate it's team. Since we are relying on IRC as a message transport, which is known for throttling messages, do not trust that you have exactly 60 seconds to answer : you have a little less depending on the number of players and the IRC server configuration.
 
 #### RULENOW *nick*
 RULENOW message is sent by arthur to the king on the #avalon game channel to signal a client it has only 2 seconds remaining to designate it's team. If the
@@ -104,7 +104,7 @@ it's code and increment the version number.
 
 #### TEAM *nick* *nick* ...
 TEAM message is sent by the king on the #avalon game channel to advertise to all participants the team it has chosen to go on the quest. When the TEAM message is
-receive, a 15 seconds voting window opens for the clients.
+receive, a 60 seconds voting window opens for the clients.
 
 #### VOTE *yes|no*
 VOTE message is sent by clients to arhur to vote on a quest. Only the first VOTE message on each quest is taken in consideration by arthur, others are ignored.
@@ -128,10 +128,10 @@ the vote and *no* the number of no.
 ### Game ends
 
 #### KILLMERLIN
-TRYANDKILLMERLIN message is sent on the #avalon game channel by arthur to ask the ASSASSIN has 15 seconds to guess who MERLIN isi if the GOOD side win three quests.
+KILLMERLIN message is sent on the #avalon game channel by arthur to ask the ASSASSIN has 60 seconds to guess who MERLIN isi if the GOOD side win three quests.
 
 #### KILLMERLINNOW
-TRYANDKILLMERLINNOW message is sent by arthur to the assassin that didn't designate MERLIN when there are only 2 seconds remaining.
+KILLMERLINNOW message is sent by arthur to the assassin that didn't designate MERLIN when there are only 2 seconds remaining.
 
 #### KILL *nick*
 KILL message is sent by the ASSASSIN to designate *nick* as MERLIN.

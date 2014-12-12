@@ -1,3 +1,4 @@
 *.swp
 arthur.cfg
 Session.vim
+arthur.sqlite
