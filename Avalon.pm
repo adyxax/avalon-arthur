@@ -68,6 +68,7 @@ sub reset_game {
         'EVIL' => [],
     };
     $av->{king} = 0;
+    $av->{team} = [];
     $av->{votes} = { pass => 0, fail => 0 };
     $av->{quests} = { pass => 0, fail => 0 };
     $av->{round} = { id => 0, failed_votes => 0 };
@@ -202,7 +203,23 @@ sub told {
         when ("EVIL") {}
         when ("KING") {}
         when ("RULENOW") {}
-        when ("TEAM") {}
+        when ("TEAM") {
+            $self->kick($who) unless ($av->{gamephase} == TEAM and $who eq $av->{players}->[$av->{king}]);
+            my ($players, $rules) = $self->rules;
+            my $team_size = $rules->[$av->{round}->{id} + 1];
+            return 'ERR_BAD_ARGUMENTS' if scalar @args != $team_size;
+            foreach (@args) {
+                if ($_ ~~ $av->{players} and !($_ ~~ $av->{team})) {
+                    push $av->{team}, $_;
+                } else {
+                    $av->{team} = [];
+                    return 'ERR_BAD_ARGUMENTS';
+                }
+            }
+            $av->{gamephase} = TEAMVOTE;
+            $av->{lastcall} = 0;
+            $self->set_timeout(58);
+        }
         when ("VOTE") {}
         when ("VOTENOW") {}
         when ("VOTERESULT") {}
