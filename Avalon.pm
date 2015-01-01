@@ -40,6 +40,19 @@ sub check_endgame_and_proceed {
                 $self->new_king;
             }
         }
+        when (QUESTVOTE) {
+            if ($av->{round}->{quest_success} == 3) {
+                $self->say( channel => $av->{config}->{'game.channel'}, body => "KILLMERLIN" );
+                $av->{gamephase} = ASSASSINGUESS;
+                $av->{lastcall} = 0;
+                $self->set_timeout(58);
+            } elsif ($av->{round}->{id} - $av->{round}->{quest_success} == 3) {
+                $self->evil_wins;
+            } else {
+                $av->{round}->{id}++;
+                $self->new_king;
+            }
+        }
     }
 }
 
@@ -104,8 +117,7 @@ sub reset_game {
     $av->{king} = 0;
     $av->{team} = [];
     $av->{votes} = {};
-    $av->{quests} = { pass => 0, fail => 0 };
-    $av->{round} = { id => 1, failed_votes => 0 };
+    $av->{round} = { id => 1, failed_votes => 0, quest_success => 0 };
     $av->{lastcall} = 0;
     $self->start_game if $self->game_ready;
 }
@@ -170,6 +182,20 @@ sub timeout_occurred {
         }
         when (TEAMVOTE) {
             foreach (@{$av->{players}}) {
+                next if (exists $av->{votes}->{$_});
+                if ($av->{lastcall}) {
+                    $self->kick($_);
+                } else {
+                    $self->say( channel => 'msg', who => $_, body => "VOTENOW" );
+                }
+            }
+            unless ($av->{lastcall}) {
+                $self->set_timeout(2);
+                $av->{lastcall} = 1;
+            }
+        }
+        when (QUESTVOTE) {
+            foreach (@{$av->{team}}) {
                 next if (exists $av->{votes}->{$_});
                 if ($av->{lastcall}) {
                     $self->kick($_);
@@ -290,6 +316,26 @@ sub told {
                             $av->{round}->{failed_votes}++;
                             $self->check_endgame_and_proceed;
                         }
+                    }
+                }
+                when (QUESTVOTE) {
+                    $self->kick($who) unless $who ~~ @{$av->{team}};
+                    $av->{votes}->{$who} = $args[0] unless exists $av->{votes}->{$who};
+                    if (scalar keys $av->{votes} == scalar @{$av->{team}}) {
+                        my $score = 0;
+                        foreach (keys $av->{votes}) {
+                            $score++ if $av->{votes}->{$_} eq "yes";
+                        }
+                        $av->{votes} = {};
+                        my $goal = (scalar @{$av->{team}}) - $rules->[6];
+                        if ($score >= $goal) {
+                            $av->{votes} = {};
+                            $av->{round}->{quest_success}++;
+                            $self->say( channel => $av->{config}->{'game.channel'}, body => "QUESTRESULT PASS $score" );
+                        } else {
+                            $self->say( channel => $av->{config}->{'game.channel'}, body => "QUESTRESULT FAIL $score" );
+                        }
+                        $self->check_endgame_and_proceed;
                     }
                 }
             }
