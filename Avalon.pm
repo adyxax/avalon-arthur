@@ -55,6 +55,17 @@ sub load_avalon_db {
    );
 }
 
+sub new_king {
+    my $self = shift;
+    my $av = $self->{avalon};
+    my ($players, $rules) = $self->rules;
+    $av->{king} = ($av->{king} +1) % $players;
+    $self->say( channel => $av->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}] $rules->[$av->{round}->{id}] $av->{round}->{failed_votes}" );
+    $av->{gamephase} = TEAM;
+    $av->{lastcall} = 0;
+    $self->set_timeout(58);
+}
+
 sub reset_game {
     my $self = shift;
     my $av = $self->{avalon};
@@ -122,10 +133,7 @@ sub timeout_occurred {
             $self->say( channel => 'msg', who => $_, body => $evil_msg ) foreach (@{$av->{roles}->{EVIL}});
             # Finally we designate the first king
             $av->{king} = rand($players);
-            $self->say( channel => $av->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}] $rules->[$av->{round}->{id}] $av->{round}->{failed_votes}" );
-            $av->{gamephase} = TEAM;
-            $av->{lastcall} = 0;
-            $self->set_timeout(58);
+            $self->new_king;
         }
         when (TEAM) {
             if ($av->{lastcall}) {
