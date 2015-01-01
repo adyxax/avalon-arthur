@@ -56,11 +56,21 @@ sub check_endgame_and_proceed {
     }
 }
 
+sub endgame_info {
+    my ( $self, $who ) = @_;
+    my $av = $self->{avalon};
+    $self->say( channel => $av->{config}->{'game.channel'}, body => "ROLE MERLIN $av->{roles}->{MERLIN}->[0]" );
+    $self->say( channel => $av->{config}->{'game.channel'}, body => "ROLE ASSASSIN $av->{roles}->{ASSASSIN}->[0]" );
+    $self->say( channel => $av->{config}->{'game.channel'}, body => "ROLE GOOD " . join(' ', @{$av->{roles}->{GOOD}}) );
+    $self->say( channel => $av->{config}->{'game.channel'}, body => "ROLE EVIL " . join(' ', @{$av->{roles}->{EVIL}}) );
+}
+
 sub evil_wins {
     my ( $self, $who ) = @_;
     my $av = $self->{avalon};
     my $evil_msg = "WINNERSIDE EVIL $av->{roles}->{ASSASSIN}->[0] " . join(' ', @{$av->{roles}->{EVIL}});
     $self->say( channel => $av->{config}->{'game.channel'}, body => $evil_msg );
+    $self->endgame_info;
     $self->reset_game;
 }
 
@@ -74,6 +84,7 @@ sub good_wins {
     my $av = $self->{avalon};
     my $evil_msg = "WINNERSIDE GOOD $av->{roles}->{MERLIN}->[0] " . join(' ', @{$av->{roles}->{GOOD}});
     $self->say( channel => $av->{config}->{'game.channel'}, body => $evil_msg );
+    $self->endgame_info;
     $self->reset_game;
 }
 
