@@ -1,6 +1,6 @@
 package Bot::BasicBot::Pluggable::Module::Avalon;
 {
-    $Avalon::Arthur::VERSION = '0.06';
+    $Avalon::Arthur::VERSION = '0.07';
 };
 
 use strict;

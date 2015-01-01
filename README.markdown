@@ -115,15 +115,15 @@ this turn, it can ignore this message.
 
 The same failure outcome as for the RULENOW message applies here.
 
-#### VOTERESULT *PASS|FAIL* *yes* *no*
+#### VOTERESULT *PASS|FAIL* *yes*
 VOTERESULT message is sent on the #avalon game channel by arthur to give the result of the vote. *status* is either PASS or FAIL, *yes* is the number of yes in
-the vote and *no* the number of no. If the vote status is PASS, team members have 15 seconds to send a new vote, for the quest success this time.
+the vote. If the vote status is PASS, team members have 60 seconds to send a new vote, for the quest success this time.
 
 If the vote status is FAILED, another turn ends and endgame conditions are evaluated.
 
-#### QUESTRESULT *PASS|FAIL* *yes* *no*
+#### QUESTRESULT *PASS|FAIL* *yes*
 QUESTRESULT message is sent on the #avalon game channel by arthur to give the result of the quest. *status* is either PASS or FAIL, *yes* is the number of yes in
-the vote and *no* the number of no.
+the vote.
 
 ### Game ends
 
