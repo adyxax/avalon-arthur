@@ -59,8 +59,7 @@ sub reset_game {
     my $self = shift;
     my $av = $self->{avalon};
     $av->{gamephase} = GAMESTART;
-    $av->{timeout} = 0;
-    $av->{players} = ();
+    $av->{players} = [];
     $av->{roles} = {
         'MERLIN' => [],
         'ASSASSIN' => [],
@@ -69,9 +68,9 @@ sub reset_game {
     };
     $av->{king} = 0;
     $av->{team} = [];
-    $av->{votes} = { pass => 0, fail => 0 };
+    $av->{votes} = {};
     $av->{quests} = { pass => 0, fail => 0 };
-    $av->{round} = { id => 0, failed_votes => 0 };
+    $av->{round} = { id => 1, failed_votes => 0 };
     $av->{lastcall} = 0;
     $self->start_game if $self->game_ready;
 }
@@ -123,7 +122,7 @@ sub timeout_occurred {
             $self->say( channel => 'msg', who => $_, body => $evil_msg ) foreach (@{$av->{roles}->{EVIL}});
             # Finally we designate the first king
             $av->{king} = rand($players);
-            $self->say( channel => $av->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}] $rules->[$av->{round}->{id} + 1] $av->{round}->{failed_votes}" );
+            $self->say( channel => $av->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}] $rules->[$av->{round}->{id}] $av->{round}->{failed_votes}" );
             $av->{gamephase} = TEAM;
             $av->{lastcall} = 0;
             $self->set_timeout(58);
@@ -206,7 +205,7 @@ sub told {
         when ("TEAM") {
             $self->kick($who) unless ($av->{gamephase} == TEAM and $who eq $av->{players}->[$av->{king}]);
             my ($players, $rules) = $self->rules;
-            my $team_size = $rules->[$av->{round}->{id} + 1];
+            my $team_size = $rules->[$av->{round}->{id}];
             return 'ERR_BAD_ARGUMENTS' if scalar @args != $team_size;
             foreach (@args) {
                 if ($_ ~~ $av->{players} and !($_ ~~ $av->{team})) {
