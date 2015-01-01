@@ -90,6 +90,7 @@ sub start_game {
     my $self = shift;
     my $av = $self->{avalon};
     my @players = shuffle keys $av->{registered};
+    @players = @players[0..9] if scalar @players > 10;
     $av->{players} = \@players;
     $self->say( channel => $av->{config}->{'game.channel'}, body => "GAMESTART " . join(' ', @players) );
     $self->set_timeout(10);
