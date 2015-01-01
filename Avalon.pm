@@ -69,6 +69,14 @@ sub game_ready {
     return ( $av->{gamephase} == GAMESTART and scalar keys $av->{registered} >= 5 );
 }
 
+sub good_wins {
+    my ( $self, $who ) = @_;
+    my $av = $self->{avalon};
+    my $evil_msg = "WINNERSIDE GOOD $av->{roles}->{MERLIN}->[0] " . join(' ', @{$av->{roles}->{GOOD}});
+    $self->say( channel => $av->{config}->{'game.channel'}, body => $evil_msg );
+    $self->reset_game;
+}
+
 sub kick {
     my ( $self, $who ) = @_;
     my $av = $self->{avalon};
@@ -208,6 +216,15 @@ sub timeout_occurred {
                 $av->{lastcall} = 1;
             }
         }
+        when (ASSASSINGUESS) {
+            if ($av->{lastcall}) {
+                $self->kick($av->{roles}->{ASSASSIN}->[0]);
+            } else {
+                $self->say( channel => $av->{config}->{'game.channel'}, body => "KILLMERLINNOW" );
+                $self->set_timeout(2);
+                $av->{lastcall} = 1;
+            }
+        }
         default {
             $self->say( channel => $av->{config}->{'game.channel'}, body => "timeout" );
         }
@@ -215,6 +232,9 @@ sub timeout_occurred {
 }
 
 ### IRC methods override ######################################################
+sub chanpart {
+}
+
 sub connected {
     my $self = shift;
     $poe_kernel->state( 'avalon_timeout', $self, 'timeout_occurred' );
@@ -345,7 +365,22 @@ sub told {
         when ("QUESTRESULT") {}
         when ("KILLMERLIN") {}
         when ("KILLMERLINNOW") {}
-        when ("KILL") {}
+        when ("KILL") {
+            return 'ERR_BAD_ARGUMENTS' unless scalar @args == 1 and $args[0] ~~ $av->{players};
+            given ($av->{gamephase}) {
+                when (ASSASSINGUESS) {
+                   if ($who eq $av->{roles}->{ASSASSIN}->[0]) {
+                       if ($args[0] eq $av->{roles}->{MERLIN}->[0]) {
+                           $self->evil_wins;
+                       } else {
+                           $self->good_wins;
+                       }
+                   } else {
+                       $self->kick($who);
+                   }
+                }
+            }
+        }
         when ("WINNERSIDE") {}
         when ("INFO") {}
         when ("GAMEURL") {}

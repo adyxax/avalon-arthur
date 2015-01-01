@@ -128,7 +128,7 @@ the vote.
 ### Game ends
 
 #### KILLMERLIN
-KILLMERLIN message is sent on the #avalon game channel by arthur to ask the ASSASSIN has 60 seconds to guess who MERLIN isi if the GOOD side win three quests.
+KILLMERLIN message is sent on the #avalon game channel by arthur to tell the ASSASSIN has 60 seconds to guess who MERLIN is when the GOOD side winis its third quest.
 
 #### KILLMERLINNOW
 KILLMERLINNOW message is sent by arthur to the assassin that didn't designate MERLIN when there are only 2 seconds remaining.
