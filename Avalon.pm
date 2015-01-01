@@ -36,13 +36,14 @@ sub game_ready {
 sub kick {
     my ( $self, $who ) = @_;
     my $av = $self->{avalon};
+    return unless $who ~~ $av->{registered};
     my $avdb = $self->{avdb};
     my $entry = $who . $av->{registered}->{$who}->{version};
     my $score = $avdb->get('KICKS', $entry);
     $avdb->set('KICKS', $entry, defined $score ? int($score) + 1 : 1);
     $self->say( channel => $av->{config}->{'game.channel'}, body => "UNREGISTERED $who" );
     delete $av->{registered}->{$who};
-    $self->reset_game;
+    $self->reset_game if $who ~~ $av->{players};
 }
 
 sub load_avalon_db {
