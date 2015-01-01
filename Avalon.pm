@@ -32,14 +32,23 @@ sub check_endgame_and_proceed {
     my $self = shift;
     my $av = $self->{avalon};
 
-    if ($av->{round}->{failed_votes} >= 5) {
-        # TODO $self->evil_wins
-    }
     given ($av->{gamephase}) {
         when (TEAMVOTE) {
-            $self->new_king;
+            if ($av->{round}->{failed_votes} == 5) {
+                $self->evil_wins;
+            } else {
+                $self->new_king;
+            }
         }
     }
+}
+
+sub evil_wins {
+    my ( $self, $who ) = @_;
+    my $av = $self->{avalon};
+    my $evil_msg = "WINNERSIDE EVIL $av->{roles}->{ASSASSIN}->[0] " . join(' ', @{$av->{roles}->{EVIL}});
+    $self->say( channel => $av->{config}->{'game.channel'}, body => $evil_msg );
+    $self->reset_game;
 }
 
 sub game_ready {
