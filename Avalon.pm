@@ -28,6 +28,20 @@ my %gamerules = (
     10 => [ 4, 3, 4, 4, 5, 5, 1],
 );
 
+sub check_endgame_and_proceed {
+    my $self = shift;
+    my $av = $self->{avalon};
+
+    if ($av->{round}->{failed_votes} >= 5) {
+        # TODO $self->evil_wins
+    }
+    given ($av->{gamephase}) {
+        when (TEAMVOTE) {
+            $self->new_king;
+        }
+    }
+}
+
 sub game_ready {
     my $av = shift->{avalon};
     return ( $av->{gamephase} == GAMESTART and scalar keys $av->{registered} >= 5 );
@@ -60,6 +74,7 @@ sub new_king {
     my $av = $self->{avalon};
     my ($players, $rules) = $self->rules;
     $av->{king} = ($av->{king} +1) % $players;
+    $av->{team} = [];
     $self->say( channel => $av->{config}->{'game.channel'}, body => "KING $av->{players}->[$av->{king}] $rules->[$av->{round}->{id}] $av->{round}->{failed_votes}" );
     $av->{gamephase} = TEAM;
     $av->{lastcall} = 0;
@@ -140,6 +155,20 @@ sub timeout_occurred {
                 $self->kick($av->{players}->[$av->{king}]);
             } else {
                 $self->say( channel => $av->{config}->{'game.channel'}, body => "RULENOW $av->{players}->[$av->{king}]" );
+                $self->set_timeout(2);
+                $av->{lastcall} = 1;
+            }
+        }
+        when (TEAMVOTE) {
+            foreach (@{$av->{players}}) {
+                next if (exists $av->{votes}->{$_});
+                if ($av->{lastcall}) {
+                    $self->kick($_);
+                } else {
+                    $self->say( channel => 'msg', who => $_, body => "VOTENOW" );
+                }
+            }
+            unless ($av->{lastcall}) {
                 $self->set_timeout(2);
                 $av->{lastcall} = 1;
             }
@@ -227,7 +256,35 @@ sub told {
             $av->{lastcall} = 0;
             $self->set_timeout(58);
         }
-        when ("VOTE") {}
+        when ("VOTE") {
+            return 'ERR_BAD_ARGUMENTS' unless scalar @args == 1 and $args[0] ~~ [ "yes", "no" ];
+            my ($players, $rules) = $self->rules;
+            given ($av->{gamephase}) {
+                when (TEAMVOTE) {
+                    $self->kick($who) unless $who ~~ $av->{players};
+                    $av->{votes}->{$who} = $args[0] unless exists $av->{votes}->{$who};
+                    if (scalar keys $av->{votes} == $players) {
+                        my $score = 0;
+                        foreach (keys $av->{votes}) {
+                            $score++ if $av->{votes}->{$_} eq "yes";
+                        }
+                        $av->{votes} = {};
+                        if ($score > $players / 2) {
+                            $av->{round}->{failed_votes} = 0;
+                            $av->{votes} = {};
+                            $av->{gamephase} = QUESTVOTE;
+                            $av->{lastcall} = 0;
+                            $self->set_timeout(58);
+                            $self->say( channel => $av->{config}->{'game.channel'}, body => "VOTERESULT PASS $score" );
+                        } else {
+                            $self->say( channel => $av->{config}->{'game.channel'}, body => "VOTERESULT FAIL $score" );
+                            $av->{round}->{failed_votes}++;
+                            $self->check_endgame_and_proceed;
+                        }
+                    }
+                }
+            }
+        }
         when ("VOTENOW") {}
         when ("VOTERESULT") {}
         when ("QUESTRESULT") {}
