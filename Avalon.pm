@@ -1,6 +1,6 @@
 package Bot::BasicBot::Pluggable::Module::Avalon;
 {
-    $Avalon::Arthur::VERSION = '0.07';
+    $Avalon::Arthur::VERSION = '0.08';
 };
 
 use strict;
@@ -245,7 +245,6 @@ sub init {
     my $av = $self->{avalon} = {};
     $self->load_avalon_db;
     $av->{config} = $self->bot->{store_object}->{store}->{cfg}->{cfg};
-    $av->{gamesplayed} = 0;
     $av->{registered} = {};
     $self->reset_game;
 }

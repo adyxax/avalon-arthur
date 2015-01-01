@@ -29,12 +29,10 @@ vote passes (absolute majority), each member of the team will vote whether or no
 success, except for the fourth quest at 7 or more players succeeds if all or all but one team members vote for success. If the vote fails, we increment the failed vote counter. We check then for end game conditions, and if those are not met, the next player is given the
 king title and another turn begins.
 
-The playing order is kept between games for 16 games in a row, then it is shuffled.
-
 When at least 5 bots are registered for a game, the game starts 10 seconds later. Other bots can still register or unregister, each event resetting the 10
 seconds timer.
 
-When a vote begins, each client has 15 seconds to vote.
+When a vote begins, each client has 60 seconds to vote.
 
 Protocol
 ========
